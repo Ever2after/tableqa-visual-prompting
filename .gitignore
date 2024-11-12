@@ -1,2 +1,5 @@
 *env
 *txt
+results
+results_gemini
+embeddings.pkl
