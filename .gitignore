@@ -1,5 +1,11 @@
 *env
 *txt
 results
+results_gpt
 results_gemini
 embeddings.pkl
+*log
+*csv
+__pycache__
+*json
+*pkl
