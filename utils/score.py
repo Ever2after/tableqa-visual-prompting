@@ -39,7 +39,7 @@ def _get_row_embeddings(df):
         results = list(executor.map(_process_row, [df.iloc[i] for i in range(len(df))]))
     return dict(zip(range(len(df)), results))
 
-def get_table_score(table, query, top_k=10, column_top_k=5, row_top_k=5, cached_embeddings=None):
+def get_table_score(table, query, top_k, column_top_k, row_top_k, cached_embeddings):
     if cached_embeddings:
         column_embeddings, row_embeddings, query_embedding = cached_embeddings
     else:

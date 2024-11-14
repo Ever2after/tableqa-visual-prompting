@@ -24,14 +24,14 @@ class GPT:
             print(f"GPT Error: {e}")
             return ""
 
-    def get_tableqa_answer(self, mode='text', table=None, question=None):
+    def get_tableqa_answer(self, mode='text', table=None, query=None):
         if mode == 'text':
             messages = [{
                 "role": "user",
                 "content": [
                     {"type": "text", "text": "Answer the following question. Just give the answer, not the process. \nTable: "},
                     {"type": "text", "text": table},
-                    {"type": "text", "text": f"Question: {question}\nAnswer:"}
+                    {"type": "text", "text": f"Question: {query}\nAnswer:"}
                 ],
             }]
         elif mode == 'image':
@@ -46,7 +46,7 @@ class GPT:
                             "detail" : 'auto'
                         }
                     },
-                    {"type": "text", "text": f"Question: {question}\nAnswer:"}
+                    {"type": "text", "text": f"Question: {query}\nAnswer:"}
                 ],
             }]
         else:

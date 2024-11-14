@@ -25,12 +25,12 @@ class Gemini:
             print(f"Gemini Error: {e}")
             return ""
 
-    def get_tableqa_answer(self, mode='text', table=None, question=None):
+    def get_tableqa_answer(self, mode='text', table=None, query=None):
         if mode == 'text':
             messages = [
                 {"text": "Answer the following question. Just give the answer, not the process. \nTable: "},
                 {"text": table},
-                {"text": f"Question: {question}\nAnswer:"}
+                {"text": f"Question: {query}\nAnswer:"}
             ]
         elif mode == 'image':
             messages = [
@@ -41,7 +41,7 @@ class Gemini:
                         "data": table
                     }
                 },
-                {"text": f"Question: {question}\nAnswer:"}
+                {"text": f"Question: {query}\nAnswer:"}
             ]
         else:
             return ""
