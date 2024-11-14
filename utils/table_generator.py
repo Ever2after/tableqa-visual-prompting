@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('Agg')  # 비-GUI 백엔드 사용
 import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
 from matplotlib import rcParams

@@ -8,3 +8,4 @@ class Config:
     GOOGLE_AI_API_KEY = os.getenv('GOOGLE_AI_API_KEY')
     RESULTS_PATH = os.getenv('RESULTS_PATH', 'results/')
     DATASET_PATH = os.getenv('DATASET_PATH', 'data/')
+    LOG_DIR = os.getenv('LOG_DIR', 'logs/')

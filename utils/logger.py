@@ -1,5 +1,6 @@
 import logging
 import os
+from config import Config
 
 def setup_logger(name, log_file, level=logging.INFO):
     """
@@ -14,6 +15,8 @@ def setup_logger(name, log_file, level=logging.INFO):
         - logger: 설정된 logger 객체
     """
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    
+    log_file = os.path.join(Config.LOG_DIR, log_file)
     
     handler = logging.FileHandler(log_file)
     handler.setFormatter(formatter)

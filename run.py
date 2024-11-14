@@ -1,5 +1,7 @@
+import pandas as pd
 import argparse
 import os
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from data.wikitq import WikiTQDataset
 from data.tabfact import TabFactDataset
 from evaluate import evaluate_predictions
@@ -9,7 +11,6 @@ from config import Config
 from utils.logger import setup_logger
 from utils.table_generator import generate_table_image
 from utils.score import get_table_score
-import pandas as pd
 
 # 로거 설정
 logger = setup_logger("Run", log_file='run.log')
@@ -31,8 +32,6 @@ def get_answer(table, query, model='gpt', plain=False, top_k=10, column_top_k=5,
         score = get_table_score(table, query, top_k=top_k, column_top_k=column_top_k, row_top_k=row_top_k, cached_embeddings=cached_embeddings)
     else:
         score = None
-
-    print(score)
     
     try:
         table_image = generate_table_image(table, score)
@@ -63,7 +62,7 @@ def run_and_save_predictions(dataset, model_name, output_file, length=100, offse
     logger.info(f"Running model: {model_name}")
     predictions = []
 
-    for i in range(offset, offset + min(len(dataset), length)):
+    def process_item(i):
         item = dataset.get_item(i)
         logger.info(f"Processing item {i} with question: {item['question']}")
         table = item['table']
@@ -71,7 +70,6 @@ def run_and_save_predictions(dataset, model_name, output_file, length=100, offse
         answer = item['answer']
         cached_embeddings = item['embedding']
 
-        # get_answer 함수 호출
         prediction = get_answer(
             table=table,
             query=question,
@@ -82,9 +80,17 @@ def run_and_save_predictions(dataset, model_name, output_file, length=100, offse
             row_top_k=row_top_k,
             cached_embeddings=cached_embeddings
         )
+        return {'index': i, 'prediction': prediction, 'answer': answer}
 
-        predictions.append({'index': i, 'prediction': prediction, 'answer': answer})
-    
+    with ThreadPoolExecutor() as executor:
+        future_to_index = {executor.submit(process_item, i): i for i in range(offset, offset + min(len(dataset), length))}
+        for future in as_completed(future_to_index):
+            try:
+                result = future.result()
+                predictions.append(result)
+            except Exception as e:
+                logger.error(f"Error processing item {future_to_index[future]}: {e}")
+
     # 결과 저장
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
     pd.DataFrame(predictions).to_csv(output_file, index=False)

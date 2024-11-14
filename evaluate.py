@@ -14,13 +14,14 @@ def evaluate_predictions(predictions_file, dataset_name):
     # 예측값 및 실제 정답 로드
     predictions = pd.read_csv(predictions_file)
 
-    # 'seq_out' 열을 기준으로 비교
-    y_true = predictions['answer']
-    y_pred = predictions['prediction']
-
     # 메트릭 계산
+    predictions['score'] = predictions.apply(lambda x: 1 if x['answer'] in x['prediction'] else 0, axis=1)
+    
+    # output file 저장 (csv)
+    predictions.to_csv(predictions_file, index=False)
+    
     metrics = {
-        "accuracy": sum(y_true == y_pred) / len(y_true),
+        "accuracy": predictions["score"].mean()
     }
 
     return metrics

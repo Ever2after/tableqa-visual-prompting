@@ -58,11 +58,10 @@ def get_table_score(table, query, top_k=10, column_top_k=5, row_top_k=5, cached_
         for i in range(len(col_scores)):
             scores.iloc[:, i] += col_scores[i] 
 
-        # 각 cell의 score을 sort하고 상위 top_k개의 cell만 남기고 나머지는 0으로 초기화
-        scores = scores.unstack().reset_index()
-        scores.columns = ['row', 'column', 'score']
-        scores = scores.sort_values('score', ascending=False).head(top_k)
-        scores = scores.pivot(index='row', columns='column', values='score').fillna(0)
+        # 각 cell의 score을 sort하고 상위 top_k개의 cell의 score 제외 나머지는 0으로
+        sorted_scores = scores.stack().sort_values(ascending=False)
+        threshold_score = sorted_scores.iloc[top_k - 1] if len(sorted_scores) > top_k else sorted_scores.iloc[-1]
+        scores = scores.where(scores >= threshold_score, 0)
     else:
         top_k_rows = sorted(row_scores, key=row_scores.get, reverse=True)[:row_top_k]
         for i in top_k_rows:
