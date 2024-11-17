@@ -3,9 +3,9 @@
 results
 results_gpt
 results_gemini
-embeddings.pkl
-*log
+logs
 *csv
 __pycache__
 *json
 *pkl
+data

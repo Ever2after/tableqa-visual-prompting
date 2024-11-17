@@ -6,7 +6,7 @@ class Gemini:
     def __init__(self, model='gemini-1.5-flash-latest'):
         self.model = model
 
-    def get_gemini(self, messages):
+    def get_response(self, messages):
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={Config.GOOGLE_AI_API_KEY}"
         request_data = { 
             "contents": [{
@@ -46,7 +46,7 @@ class Gemini:
         else:
             return ""
         
-        answer = self.get_gemini(messages)
+        answer = self.get_response(messages)
         if answer:
             return answer.lower()
         return ""

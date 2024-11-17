@@ -7,12 +7,12 @@ from utils.logger import setup_logger
 # 로거 설정
 logger = setup_logger("DataLoader", log_file='data_loader.log')
 
-def download_and_cache_dataset(dataset_url, local_filename, cache_dir):
+def download_and_cache_dataset(dataset_url, local_filename, cache_dir, split):
     """
     데이터셋을 Hugging Face URL에서 다운로드하거나 로컬 캐시에서 로드.
 
     Parameters:
-        - dataset_url (str): Hugging Face Dataset URL (예: 'hf://datasets/TableQAKit/WTQ/test.json')
+        - dataset_url (str): Hugging Face Dataset URL
         - local_filename (str): 로컬에 저장할 파일 경로
         - cache_dir (str): 캐시 디렉토리 경로
 
@@ -23,15 +23,16 @@ def download_and_cache_dataset(dataset_url, local_filename, cache_dir):
 
     if os.path.exists(local_path):
         logger.info(f"Loading dataset from local cache: {local_path}")
-        return pd.read_json(local_path)
+        return pd.read_json(local_path, lines=True)
 
     logger.info(f"Downloading dataset from: {dataset_url}")
-    # dataset = load_dataset(dataset_url, split='test', cache_dir=cache_dir)
-    dataset = pd.read_json(dataset_url)
+    dataset = load_dataset(dataset_url, split=split, cache_dir=cache_dir, trust_remote_code=True)
+
     os.makedirs(os.path.dirname(local_path), exist_ok=True)
     dataset.to_json(local_path)
     logger.info(f"Dataset cached locally at: {local_path}")
-    return pd.read_json(local_path)
+
+    return dataset.to_pandas()
 
 def load_embeddings(embedding_file, num_entries):
     """

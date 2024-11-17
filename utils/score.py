@@ -39,13 +39,15 @@ def _get_row_embeddings(df):
         results = list(executor.map(_process_row, [df.iloc[i] for i in range(len(df))]))
     return dict(zip(range(len(df)), results))
 
+def get_tableqa_embeddings(table, query):
+    with ThreadPoolExecutor() as executor:
+        column_embeddings = executor.submit(_get_column_embeddings, table)
+        row_embeddings = executor.submit(_get_row_embeddings, table)
+        query_embedding = executor.submit(_get_embedding, query)
+    return column_embeddings.result(), row_embeddings.result(), query_embedding.result()
+
 def get_table_score(table, query, top_k, column_top_k, row_top_k, cached_embeddings):
-    if cached_embeddings:
-        column_embeddings, row_embeddings, query_embedding = cached_embeddings
-    else:
-        column_embeddings = _get_column_embeddings(table)  
-        row_embeddings = _get_row_embeddings(table)        
-        query_embedding = _get_embedding(query)    
+    column_embeddings, row_embeddings, query_embedding = cached_embeddings if cached_embeddings else get_tableqa_embeddings(table, query)
     
     scores = pd.DataFrame(0.0, index=range(len(row_embeddings)), columns=range(len(table.columns)), dtype=float)
 
