@@ -13,6 +13,7 @@ from dataset.tabfact import TabFactDataset
 from dataset.finqa import FinQADataset
 from dataset.robut_wikitq import RobutWikiTQDataset
 from dataset.fetaqa import FeTaQDataset
+from dataset.tabmwp import TabMWPDataset
 from model.gpt import GPT
 from model.gemini import Gemini
 from config import Config
@@ -35,7 +36,8 @@ def get_dataset_class(dataset_name):
         'tabfact': TabFactDataset,
         'finqa': FinQADataset,
         'robut_wikitq': RobutWikiTQDataset,
-        'fetaqa': FeTaQDataset
+        'fetaqa': FeTaQDataset,
+        'tabmwp': TabMWPDataset
     }
     if dataset_name not in dataset_classes:
         raise ValueError(f"Unsupported dataset: {dataset_name}")
@@ -91,6 +93,8 @@ def _predict_row(i, item, model, mode, cot, plain, top_k, column_top_k, row_top_
         query=query,
         cot=cot
     )
+    
+    # save_image(table_image)
     
     return {'index': i, 'prediction': prediction}
 
@@ -162,7 +166,7 @@ def main():
     parser.add_argument('--dataset', type=str, default='wikitq', help='Dataset name: wikitq, tabfact, etc.')
     parser.add_argument('--split', type=str, default='test', help='Dataset split: train, dev, test, etc.')
     parser.add_argument('--model', type=str, default='gpt', help='Model to use: gpt or gemini')
-    parser.add_argument('--mode', type=str, default='image', help='Execution mode: text or image')
+    parser.add_argument('--mode', type=str, default='text', help='Execution mode: text or image')
     parser.add_argument('--cot', action='store_true', help='Use cot (context of thinking) for LLM')
     parser.add_argument('--plain', action='store_true', help='Use plain tables without scoring')
     parser.add_argument('--top_k', type=int, default=10, help='Top K cells to consider for scoring')

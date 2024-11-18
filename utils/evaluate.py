@@ -23,9 +23,9 @@ def evaluate_predictions(predictions, dataset, metric='accuracy'):
     for i, x in predictions.iterrows():
         pred = x['prediction']
         ans = dataset.get_item(i)['answer']
-        predictions.loc[i, 'score'] = score(pred, ans)
         predictions.loc[i, 'answer'] = ans
-
+        predictions.loc[i, 'score'] = score(pred, ans)
+        
     metrics = {
         metric: predictions["score"].mean()
     }

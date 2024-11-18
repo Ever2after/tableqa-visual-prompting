@@ -7,7 +7,7 @@ from utils.logger import setup_logger
 # 로거 설정
 logger = setup_logger("DataLoader", log_file='data_loader.log')
 
-def download_and_cache_dataset(dataset_url, local_filename, cache_dir, split):
+def download_and_cache_dataset(dataset_url, local_filename, cache_dir, split, json_lines=True):
     """
     데이터셋을 Hugging Face URL에서 다운로드하거나 로컬 캐시에서 로드.
 
@@ -23,7 +23,7 @@ def download_and_cache_dataset(dataset_url, local_filename, cache_dir, split):
 
     if os.path.exists(local_path):
         logger.info(f"Loading dataset from local cache: {local_path}")
-        return pd.read_json(local_path, lines=True)
+        return pd.read_json(local_path, lines=json_lines)
 
     logger.info(f"Downloading dataset from: {dataset_url}")
     dataset = load_dataset(dataset_url, split=split, cache_dir=cache_dir, trust_remote_code=True)
