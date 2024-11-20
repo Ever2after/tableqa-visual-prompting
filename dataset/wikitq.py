@@ -33,15 +33,15 @@ class WikiTQDataset:
         
         embeddings = load_embeddings(embedding_file, len(self.dataset))
 
-        # if not embeddings[0]:
-        #     # caculate embeddings in order 
-        #     logger.info("Calculating embeddings for WikiTableQuestions dataset.")
+        if not embeddings[0]:
+            # caculate embeddings in order 
+            logger.info("Calculating embeddings for WikiTableQuestions dataset.")
 
-        #     f = lambda x: get_tableqa_embeddings(pd.DataFrame(x['table']['rows'], columns=x['table']['header']), x['question'])
-        #     with ThreadPoolExecutor() as executor:
-        #         embeddings = list(executor.map(f, self.dataset.iloc[:2000].to_dict(orient='records')))
-        #     with open(embedding_file, 'wb') as f:
-        #         pickle.dump(embeddings, f)
+            f = lambda x: get_tableqa_embeddings(pd.DataFrame(x['table']['rows'], columns=x['table']['header']), x['question'])
+            with ThreadPoolExecutor() as executor:
+                embeddings = list(executor.map(f, self.dataset.iloc[:1000].to_dict(orient='records')))
+            with open(embedding_file, 'wb') as f:
+                pickle.dump(embeddings, f)
         
         return embeddings
 

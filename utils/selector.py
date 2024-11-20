@@ -1,4 +1,4 @@
-from model import gpt, gemini
+from model import gpt, gemini, llama
 from config import Config
 from utils.logger import setup_logger
 
@@ -19,7 +19,8 @@ class LLMSelector:
         """
         model_classes = {
             'gpt': gpt.GPT,
-            'gemini': gemini.Gemini
+            'gemini': gemini.Gemini,
+            'llama': llama.Llama
         }
         if model_name not in model_classes:
             raise ValueError(f"Unsupported model: {model_name}")

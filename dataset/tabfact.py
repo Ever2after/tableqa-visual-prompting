@@ -33,15 +33,15 @@ class TabFactDataset:
         
         embeddings = load_embeddings(embedding_file, len(self.dataset))
 
-        # if not embeddings[0]:
-        #     # caculate embeddings in order 
-        #     logger.info("Calculating embeddings for TabFact dataset.")
+        if not embeddings[0]:
+            # caculate embeddings in order 
+            logger.info("Calculating embeddings for TabFact dataset.")
 
-        #     f = lambda x: get_tableqa_embeddings(pd.DataFrame(x['table']['rows'], columns=x['table']['header']), x['statement'])
-        #     with ThreadPoolExecutor() as executor:
-        #         embeddings = list(executor.map(f, self.dataset.iloc[:1000].to_dict(orient='records')))
-        #     with open(embedding_file, 'wb') as f:
-        #         pickle.dump(embeddings, f)
+            f = lambda x: get_tableqa_embeddings(pd.DataFrame(x['table']['rows'], columns=x['table']['header']), x['statement'])
+            with ThreadPoolExecutor() as executor:
+                embeddings = list(executor.map(f, self.dataset.iloc[:1000].to_dict(orient='records')))
+            with open(embedding_file, 'wb') as f:
+                pickle.dump(embeddings, f)
         
         return embeddings
 

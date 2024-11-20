@@ -12,7 +12,7 @@ logger = setup_logger("DataLoader", log_file='data_loader.log')
 
 class TabMWPDataset:
     """
-    WikiTableQuestions 데이터셋 클래스.
+    TabMWPQuestions 데이터셋 클래스.
     """
     
     def __init__(self, cache_dir=None, split='test'):
@@ -29,19 +29,19 @@ class TabMWPDataset:
     
     def _load_embeddings(self):
         """임베딩 로드."""
-        embedding_file = os.path.join(self.cache_dir, f'wikitq_{self.split}_embeddings.pkl')
+        embedding_file = os.path.join(self.cache_dir, f'tabmwp_{self.split}_embeddings.pkl')
         
         embeddings = load_embeddings(embedding_file, len(self.dataset))
 
-        # if not embeddings[0]:
-        #     # caculate embeddings in order 
-        #     logger.info("Calculating embeddings for WikiTableQuestions dataset.")
+        if not embeddings[0]:
+            # caculate embeddings in order 
+            logger.info("Calculating embeddings for TabMWPQuestions dataset.")
 
-        #     f = lambda x: get_tableqa_embeddings(pd.DataFrame(x['table']['rows'], columns=x['table']['header']), x['question'])
-        #     with ThreadPoolExecutor() as executor:
-        #         embeddings = list(executor.map(f, self.dataset.iloc[:2000].to_dict(orient='records')))
-        #     with open(embedding_file, 'wb') as f:
-        #         pickle.dump(embeddings, f)
+            f = lambda x: get_tableqa_embeddings(pd.DataFrame(x['table_for_pd']), x['question'] if not x['choices'] else x['question'] + "\n" + "Here are the choices: " + ", ".join(x['choices']))
+            with ThreadPoolExecutor() as executor:
+                embeddings = list(executor.map(f, self.dataset.iloc[:1000].to_dict(orient='records')))
+            with open(embedding_file, 'wb') as f:
+                pickle.dump(embeddings, f)
         
         return embeddings
 

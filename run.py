@@ -16,6 +16,7 @@ from dataset.fetaqa import FeTaQDataset
 from dataset.tabmwp import TabMWPDataset
 from model.gpt import GPT
 from model.gemini import Gemini
+from model.llama import Llama
 from config import Config
 from utils.logger import setup_logger
 from utils.table_generator import generate_table_image
@@ -60,7 +61,14 @@ def _predict_row(i, item, model, mode, cot, plain, top_k, column_top_k, row_top_
     cached_embeddings = item['embedding']
     
     # Initialize model instance
-    model_instance = GPT() if model == 'gpt' else Gemini()
+    if model == 'gpt':
+        model_instance = GPT()
+    elif model == 'gemini':
+        model_instance = Gemini()
+    elif model == 'llama':
+        model_instance = Llama()
+    else:
+        raise ValueError(f"Unsupported model: {model}")
     
     # If mode is text, directly get the answer using the textual representation of the table
     if mode == 'text':
@@ -140,8 +148,8 @@ def _select_row(selector, dataset, text_predictions, image_predictions, index):
     selected_pred = selector.select(table, query, [text_pred, image_pred])
     return {'index': index, 'selected_index': selected_pred, 'prediction': [text_pred, image_pred][selected_pred]}
 
-def select(dataset, text_predictions, image_predictions):
-    selector = LLMSelector()
+def select(dataset, model, text_predictions, image_predictions):
+    selector = LLMSelector(model_name=model)
     selected_predictions = []
     
     indices = text_predictions.index  # Assuming indices match between text_predictions and image_predictions
@@ -246,7 +254,7 @@ def main():
         text_predictions = pd.read_csv(args.text_pred_path, index_col=0)
         image_predictions = pd.read_csv(args.image_pred_path, index_col=0)
 
-        selected_predictions = select(dataset, text_predictions, image_predictions)
+        selected_predictions = select(dataset, args.model, text_predictions, image_predictions)
 
         output_path = os.path.join(Config.RESULTS_PATH, args.output_path or 'selected_predictions.csv')
         selected_predictions.to_csv(output_path, index=False)
