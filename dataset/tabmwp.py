@@ -33,15 +33,15 @@ class TabMWPDataset:
         
         embeddings = load_embeddings(embedding_file, len(self.dataset))
 
-        if not embeddings[0]:
-            # caculate embeddings in order 
-            logger.info("Calculating embeddings for TabMWPQuestions dataset.")
+        # if not embeddings[0]:
+        #     # caculate embeddings in order 
+        #     logger.info("Calculating embeddings for TabMWPQuestions dataset.")
 
-            f = lambda x: get_tableqa_embeddings(pd.DataFrame(x['table_for_pd']), x['question'] if not x['choices'] else x['question'] + "\n" + "Here are the choices: " + ", ".join(x['choices']))
-            with ThreadPoolExecutor() as executor:
-                embeddings = list(executor.map(f, self.dataset.iloc[:1000].to_dict(orient='records')))
-            with open(embedding_file, 'wb') as f:
-                pickle.dump(embeddings, f)
+        #     f = lambda x: get_tableqa_embeddings(pd.DataFrame(x['table_for_pd']), x['question'] if not x['choices'] else x['question'] + "\n" + "Here are the choices: " + ", ".join(x['choices']))
+        #     with ThreadPoolExecutor() as executor:
+        #         embeddings = list(executor.map(f, self.dataset.iloc[:1000].to_dict(orient='records')))
+        #     with open(embedding_file, 'wb') as f:
+        #         pickle.dump(embeddings, f)
         
         return embeddings
 
@@ -57,7 +57,10 @@ class TabMWPDataset:
         question = row['question'] if not row['choices'] else \
             row['question'] + "\n" + "Here are the choices: " + ", ".join(row['choices'])
         answer = row['answer']
-        embedding = self.embeddings[index]
+        if index < len(self.embeddings):
+            embedding = self.embeddings[index]
+        else:
+            embedding = None
 
         return {
             "table": table,

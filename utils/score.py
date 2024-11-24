@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 def _get_embedding(input_str):
     response = openai_client.embeddings.create(
-        model="text-embedding-ada-002",
+        model="text-embedding-3-small",
         input=input_str,
         encoding_format="float"
     )

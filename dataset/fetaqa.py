@@ -56,7 +56,10 @@ class FeTaQDataset:
         table = pd.DataFrame(row.table_array[1:], columns=row.table_array[0])
         question = row['question']
         answer = row['answer'].lower()
-        embedding = self.embeddings[index]
+        if index < len(self.embeddings):
+            embedding = self.embeddings[index]
+        else:
+            embedding = None
 
         return {
             "table": table,

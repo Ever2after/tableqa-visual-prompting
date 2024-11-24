@@ -52,9 +52,12 @@ def save_image(base64_image):
     image = Image.open(io.BytesIO(base64.b64decode(base64_image)))
     image.save(f'images/{a}_table_image.png')
 
-def _predict_row(i, item, model, mode, cot, plain, top_k, column_top_k, row_top_k):
+def _predict_row(i, item, model, mode, cot, plain, top_k, column_top_k, row_top_k, prev_pred=None):
     if i%100 == 0:
         logger.info(f"Processing item {i}")
+
+    if not (pd.isna(prev_pred) or pd.isnull(prev_pred) or prev_pred == ''):
+        return {'index': i, 'prediction': prev_pred}
     
     table = item['table']
     query = item['question']
@@ -106,11 +109,12 @@ def _predict_row(i, item, model, mode, cot, plain, top_k, column_top_k, row_top_
     
     return {'index': i, 'prediction': prediction}
 
-def predict(dataset, model, mode, cot=False, plain=False, top_k=10, column_top_k=5, row_top_k=5, length=100, offset=0, max_workers=4):
+def predict(dataset, model, mode, cot=False, plain=False, top_k=10, column_top_k=5, row_top_k=5, length=100, offset=0, max_workers=4, previous_predictions=None):
     logger.info(f"Running predictions with model: {model}, mode: {mode}, cot: {cot}, plain: {plain}, top_k: {top_k}, column_top_k: {column_top_k}, row_top_k: {row_top_k}")
     predictions = []
 
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
+        # submit task only if the ith prediction is dosen't exist or null or '' or sth like that
         future_to_index = {
             executor.submit(
                 _predict_row, 
@@ -122,8 +126,9 @@ def predict(dataset, model, mode, cot=False, plain=False, top_k=10, column_top_k
                 plain, 
                 top_k, 
                 column_top_k, 
-                row_top_k
-            ): i 
+                row_top_k,
+                prev_pred = (previous_predictions.loc[i, 'prediction'] if i in previous_predictions.index else None) if not previous_predictions.empty else None
+            ): i
             for i in range(offset, offset + min(len(dataset), length))
         }
 
@@ -148,13 +153,16 @@ def _select_row(selector, dataset, text_predictions, image_predictions, index):
     selected_pred = selector.select(table, query, [text_pred, image_pred])
     return {'index': index, 'selected_index': selected_pred, 'prediction': [text_pred, image_pred][selected_pred]}
 
-def select(dataset, model, text_predictions, image_predictions):
+def select(dataset, model, text_predictions, image_predictions, max_workers):
     selector = LLMSelector(model_name=model)
     selected_predictions = []
+
+    text_predictions = text_predictions.sort_index()
+    image_predictions = image_predictions.sort_index()
     
     indices = text_predictions.index  # Assuming indices match between text_predictions and image_predictions
     
-    with ThreadPoolExecutor() as executor:
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
         # Map the function to the thread pool
         futures = [
             executor.submit(_select_row, selector, dataset, text_predictions, image_predictions, i)
@@ -203,20 +211,6 @@ def main():
 
     # 예측 수행 및 저장
     if args.predict:
-        predictions = predict(
-            dataset,
-            args.model,
-            args.mode,
-            args.cot,
-            args.plain,
-            args.top_k,
-            args.column_top_k,
-            args.row_top_k,
-            args.length,
-            args.offset,
-            args.max_workers
-        )
-
         default_output_path = f'{args.dataset}_{args.split}_{args.model}_{args.mode}'
         if args.cot:
             default_output_path += '_cot'
@@ -234,13 +228,34 @@ def main():
         output_path = os.path.join(Config.RESULTS_PATH, output_path)
 
         os.makedirs(Config.RESULTS_PATH, exist_ok=True)
-        predictions.to_csv(output_path, index=False)
+        
+        previous_predictions = pd.DataFrame(columns=['prediction'])
+        if os.path.exists(output_path):
+            # get prediction dataframe from the output path
+            previous_predictions = pd.read_csv(output_path, index_col=0)
 
+        predictions = predict(
+                dataset,
+                args.model,
+                args.mode,
+                args.cot,
+                args.plain,
+                args.top_k,
+                args.column_top_k,
+                args.row_top_k,
+                args.length,
+                args.offset,
+                args.max_workers,
+                previous_predictions
+        )
+        
+        predictions.set_index('index', inplace=True)
+        predictions.to_csv(output_path)
         logger.info(f"Predictions saved to {output_path}")
 
     # 평가 수행
     if args.evaluate:
-        predictions = pd.read_csv(args.prediction_path, index_col=0)
+        predictions = pd.read_csv(args.prediction_path, index_col='index')
         metrics = evaluate_predictions(predictions, dataset, args.metric)
 
         # save score
@@ -254,7 +269,7 @@ def main():
         text_predictions = pd.read_csv(args.text_pred_path, index_col=0)
         image_predictions = pd.read_csv(args.image_pred_path, index_col=0)
 
-        selected_predictions = select(dataset, args.model, text_predictions, image_predictions)
+        selected_predictions = select(dataset, args.model, text_predictions, image_predictions, args.max_workers)
 
         output_path = os.path.join(Config.RESULTS_PATH, args.output_path or 'selected_predictions.csv')
         selected_predictions.to_csv(output_path, index=False)

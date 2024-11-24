@@ -11,6 +11,7 @@ class LLMSelector:
     
     def __init__(self, model_name='gpt', cache_dir=None):
         self.cache_dir = cache_dir or Config.DATASET_PATH
+        self.mode_name = model_name
         self.model = self._get_model_class(model_name)
     
     def _get_model_class(self, model_name):
@@ -43,10 +44,19 @@ Final answer should be formatted as 'Final Answer Index: i'
 {candidates_input}
 """
         model = self.model()
-        answer = model.get_response([{"role": "user", "content": prompt}]).lower()
+        if self.mode_name == 'gpt':
+            messages = [{"role": "user", "content": prompt}]
+        elif self.mode_name == 'gemini':
+            messages = [{"text": prompt }]
+        elif self.mode_name == 'llama':
+            messages = [{"role": "user", "content": prompt}]
+        answer = model.get_response(messages).lower()
         # parse index from answer
         try:
-            return int(answer.split("answer index:")[-1].strip())
+            index = int(answer.split("answer index:")[-1].strip().replace("*", ""))
+            if index >= len(candidates):
+                return 0
+            return index
         except:
             logger.error(f"Failed to parse answer: {answer}")
             return 0

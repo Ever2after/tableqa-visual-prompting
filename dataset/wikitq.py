@@ -33,15 +33,23 @@ class WikiTQDataset:
         
         embeddings = load_embeddings(embedding_file, len(self.dataset))
 
-        if not embeddings[0]:
-            # caculate embeddings in order 
-            logger.info("Calculating embeddings for WikiTableQuestions dataset.")
+        # if len(embeddings) < len(self.dataset):
+        #     # caculate embeddings in order 
+        #     logger.info("Calculating embeddings for WikiTableQuestions dataset.")
 
-            f = lambda x: get_tableqa_embeddings(pd.DataFrame(x['table']['rows'], columns=x['table']['header']), x['question'])
-            with ThreadPoolExecutor() as executor:
-                embeddings = list(executor.map(f, self.dataset.iloc[:1000].to_dict(orient='records')))
-            with open(embedding_file, 'wb') as f:
-                pickle.dump(embeddings, f)
+        #     f = lambda x: get_tableqa_embeddings(pd.DataFrame(x['table']['rows'], columns=x['table']['header']), x['question'])
+        #     with ThreadPoolExecutor() as executor:
+        #         new_embeddings = list(executor.map(f, self.dataset.iloc[len(embeddings):].to_dict(orient='records')))
+        #     with open(embedding_file, 'wb') as f:
+        #         pickle.dump(embeddings + new_embeddings, f)
+
+        # elif embeddings[0] is None:
+        #     logger.info("Calculating embeddings for WikiTableQuestions dataset.")
+        #     f = lambda x: get_tableqa_embeddings(pd.DataFrame(x['table']['rows'], columns=x['table']['header']), x['question'])
+        #     with ThreadPoolExecutor() as executor:
+        #         embeddings = list(executor.map(f, self.dataset.to_dict(orient='records')))
+        #     with open(embedding_file, 'wb') as f:
+        #         pickle.dump(embeddings, f)
         
         return embeddings
 
@@ -56,7 +64,10 @@ class WikiTQDataset:
         table = pd.DataFrame(row.table['rows'], columns=row.table['header'])
         question = row['question']
         answer = ', '.join(row['answers']).lower()
-        embedding = self.embeddings[index]
+        if index < len(self.embeddings):
+            embedding = self.embeddings[index]
+        else:
+            embedding = None
 
         return {
             "table": table,

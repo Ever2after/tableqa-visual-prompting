@@ -25,7 +25,7 @@ class Llama:
             answer = response.choices[0].message.content.strip()
             return answer if self.response_format == 'text' else json.loads(answer)
         except Exception as e:
-            print(f"GPT Error: {e}")
+            print(f"Llama Error: {e}")
             return ""
 
     def get_tableqa_answer(self, mode='text', table=None, query=None, cot=False):
@@ -51,7 +51,7 @@ class Llama:
                             "detail" : 'auto'
                         }
                     },
-                    {"type": "text", "text": f"Question: {query}\nAnswer:"} \
+                    {"type": "text", "text": f"Question: {query}\nJust give only the answer, not the process.\nAnswer:"} \
                         if not cot else {"type": "text", "text": f"Question: {query}\nLet's think step by step, and then give the final answer.\nAnswer: "},
                 ],
             }]

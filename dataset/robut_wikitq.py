@@ -58,7 +58,10 @@ class RobutWikiTQDataset:
         table = pd.DataFrame(row.table['rows'], columns=row.table['header'])
         question = row['question']
         answer = ', '.join(row['answers']).lower()
-        embedding = self.embeddings[index]
+        if index < len(self.embeddings):
+            embedding = self.embeddings[index]
+        else:
+            embedding = None
 
         return {
             "table": table,

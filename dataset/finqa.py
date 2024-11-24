@@ -59,7 +59,10 @@ class FinQADataset:
         context = '\n'.join(row['pre_text'] + row['post_text'])
         question = row['question'] # + "\n" + f"context: {context}"
         answer = row['final_result'].lower()
-        embedding = self.embeddings[index]
+        if index < len(self.embeddings):
+            embedding = self.embeddings[index]
+        else:
+            embedding = None
 
         return {
             "table": table,
